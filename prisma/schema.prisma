@@ -1,0 +1,53 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Ticket {
+  id          String    @id @default(uuid())
+  eventName   String
+  ticketType  String    // VIP, Standard, Early Bird
+  price       Int
+  qrCode      String    @unique
+  status      TicketStatus @default(ACTIVE)
+  holderName  String?
+  holderEmail String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  usedAt      DateTime?
+  
+  // Relations
+  scanLogs    ScanLog[]
+  
+  @@index([status])
+  @@index([qrCode])
+}
+
+model ScanLog {
+  id         String    @id @default(uuid())
+  ticketId   String
+  scannedAt  DateTime  @default(now())
+  scannedBy  String?
+  location   String?
+  deviceInfo String?
+  
+  // Relations
+  ticket     Ticket    @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  
+  @@index([ticketId])
+  @@index([scannedAt])
+}
+
+enum TicketStatus {
+  ACTIVE
+  USED
+  CANCELLED
+  INVALID
+}
